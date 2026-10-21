@@ -1,0 +1,33 @@
+[project]
+name = "parkha"
+version = "1.0.0"
+description = "Pest advice for Nepali farmers on Amazon Bedrock that never skips the pesticide waiting period"
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+# Bilingual sentence templates, lexicon rows and test questions read better unwrapped.
+"parkha/answer.py" = ["E501"]
+"parkha/lexicon.py" = ["E501"]
+"parkha/assistant.py" = ["E501"]
+# Regular expressions for three scripts are clearer on one line than split mid-alternation.
+"parkha/gate.py" = ["E501"]
+"parkha/guard.py" = ["E501"]
+"parkha/dates.py" = ["E501"]
+"parkha/corpus.py" = ["E501"]
+"parkha/tools.py" = ["E501"]
+"tests/*" = ["E501"]
+"eval/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

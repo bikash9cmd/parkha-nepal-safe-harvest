@@ -1,0 +1,4 @@
+# What the Lambda package needs. boto3 is in the Lambda runtime, but pinned here so the code runs
+# against the version it was tested with; FastAPI and uvicorn are for local runs only.
+boto3==1.43.116
+nepali-datetime==1.0.8.5

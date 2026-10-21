@@ -1,0 +1,30 @@
+{
+  "summary": {
+    "wrong_answers_caught": {
+      "banned_added": "15/15",
+      "both_swapped": "7/7",
+      "date_shifted": "16/16",
+      "dose_x10": "11/11",
+      "unknown_added": "29/29",
+      "unsafe_claim": "60/60",
+      "waiting_in_words": "40/40",
+      "waiting_off": "97/97",
+      "waiting_swapped": "7/7",
+      "weekday_instead_of_date": "8/8"
+    },
+    "all": "290/290 (100%)",
+    "right_answers_accepted": {
+      "templates": "42/42",
+      "paraphrases": "14/15"
+    }
+  },
+  "missed": [],
+  "paraphrases_rejected": [
+    {
+      "q": "cabbage diamondback moth what to spray",
+      "problems": [
+        "required: azadirachtin is named without its waiting period"
+      ]
+    }
+  ]
+}

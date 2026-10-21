@@ -1,0 +1,5 @@
+# Runtime (pinned: the evaluation numbers in docs/EVALUATION.md were produced with exactly these)
+boto3==1.43.116
+nepali-datetime==1.0.8.5
+fastapi==0.157.0
+uvicorn==0.54.0
