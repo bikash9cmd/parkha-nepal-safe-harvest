@@ -1,0 +1,41 @@
+chemical,product,crop,pests,ai_g_per_ha,product_per_ha,unit,waiting_days,source
+acephate,Acephate 95% SG,chilli,thrips;fruit borer;aphid,750,790,g,7,cib-2023
+acephate,Acephate 75% SP,rice,stem borer;leaf folder;planthopper;leafhopper,500-750,,g,15,cib-2023
+acetamiprid,Acetamiprid 20% SP,cabbage,aphid,15,75,g,7,cib-2023
+acetamiprid,Acetamiprid 20% SP,okra,aphid,15,75,g,3,cib-2023
+acetamiprid,Acetamiprid 20% SP,chilli,thrips,10-20,50-100,g,3,cib-2023
+acetamiprid,Acetamiprid 20% SP,rice,planthopper,10-20,50-100,g,7,cib-2023
+afidopyropen,Afidopyropen 50 g/L DC,brinjal,whitefly;jassid,50,1000,ml,1,cib-2023
+afidopyropen,Afidopyropen 50 g/L DC,cucumber,whitefly,35-50,700-1000,ml,5,cib-2023
+bifenthrin,Bifenthrin 10% EC,rice,stem borer;leaf folder;leafhopper,50,500,ml,21,cib-2023
+broflanilide,Broflanilide 300 g/L SC,chilli,fruit borer;thrips,12.6-25.2,42-84,ml,1,cib-2023
+broflanilide,Broflanilide 300 g/L SC,brinjal,shoot and fruit borer;thrips,12.6-25.2,42-84,ml,1,cib-2023
+broflanilide,Broflanilide 300 g/L SC,tomato,fruit borer;liriomyza leaf miner,18.6-25.2,62-84,ml,1,cib-2023
+broflanilide,Broflanilide 20% SC,cabbage,diamondback moth;tobacco caterpillar,25,125,ml,1,cib-2023
+broflanilide,Broflanilide 20% SC,okra,fruit borer;thrips;jassid,25,125,ml,1,cib-2023
+buprofezin,Buprofezin 25% SC,chilli,mite,75-150,300-600,ml,5,cib-2023
+buprofezin,Buprofezin 70% DF,okra,jassid,200,286,g,5,cib-2023
+buprofezin,Buprofezin 25% SC,rice,planthopper;leafhopper,200,800,ml,20,cib-2023
+carbofuran,Carbofuran 3% CG,maize,stem borer;shoot fly;thrips,1000,33300,g,,cib-2023
+carbofuran,Carbofuran 3% CG,tomato,whitefly,1200,40000,g,,cib-2023
+carbosulfan,Carbosulfan 25% EC,brinjal,shoot and fruit borer,312.5,1250,ml,5,cib-2023
+chlorantraniliprole,Chlorantraniliprole 18.5% SC,cabbage,diamondback moth,10,50,ml,3,cib-2023
+chlorantraniliprole,Chlorantraniliprole 18.5% SC,tomato,fruit borer,30,150,ml,3,cib-2023
+chlorantraniliprole,Chlorantraniliprole 18.5% SC,chilli,fruit borer,30,150,ml,3,cib-2023
+chlorantraniliprole,Chlorantraniliprole 18.5% SC,brinjal,shoot and fruit borer,40,200,ml,22,cib-2023
+chlorantraniliprole,Chlorantraniliprole 18.5% SC,bitter gourd,fruit borer;caterpillar,20-25,100-125,ml,7,cib-2023
+chlorantraniliprole,Chlorantraniliprole 18.5% SC,okra,fruit borer,25,125,ml,5,cib-2023
+chlorantraniliprole,Chlorantraniliprole 18.5% SC,rice,stem borer;leaf folder,30,150,ml,47,cib-2023
+chlorfenapyr,Chlorfenapyr 10% SC,cabbage,diamondback moth,75-100,750-1000,ml,7,cib-2023
+chlorfenapyr,Chlorfenapyr 10% SC,chilli,mite,75-100,750-1000,ml,5,cib-2023
+chlorfluazuron,Chlorfluazuron 5.4% EC,cabbage,diamondback moth;tobacco caterpillar,75,1500,ml,7,cib-2023
+chlorpyrifos,Chlorpyrifos 20% EC,cabbage,diamondback moth,400,2000,ml,,cib-2023
+chlorpyrifos,Chlorpyrifos 20% EC,brinjal,shoot and fruit borer,200,1000,ml,,cib-2023
+chlorpyrifos,Chlorpyrifos 20% EC,bean,pod borer,600,3000,ml,,cib-2023
+clothianidin,Clothianidin 0.5% GR,okra,jassid;whitefly,40-60,8000-12000,g,1,cib-2023
+azadirachtin,Azadirachtin 1% EC (neem),tomato,fruit borer,,1000-1500,ml,3,cib-bio-2024
+azadirachtin,Azadirachtin 1% EC (neem),brinjal,shoot and fruit borer,,1000-1500,ml,3,cib-bio-2024
+azadirachtin,Azadirachtin 0.03% WSP (neem oil),cabbage,aphid;diamondback moth,,2500-5000,,7,cib-bio-2024
+azadirachtin,Azadirachtin 0.03% WSP (neem oil),okra,fruit borer;whitefly;leafhopper,,2500-5000,,7,cib-bio-2024
+azadirachtin,Azadirachtin 5% (neem extract),cauliflower,diamondback moth;aphid;tobacco caterpillar,,200,,5,cib-bio-2024
+azadirachtin,Azadirachtin 5% (neem extract),tomato,aphid;whitefly;fruit borer,,200,,5,cib-bio-2024
