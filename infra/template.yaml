@@ -1,0 +1,274 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Parkha - pest and pesticide waiting-period advice for Nepali farmers on Amazon Bedrock
+  (Nova Lite + Guardrails). API Gateway HTTP API + one Lambda + DynamoDB answer log.
+  Build with infra/build.sh first. Deploy: infra/README.md. Cost: docs/COST.md.
+
+Parameters:
+  ModelId:
+    Type: String
+    Default: apac.amazon.nova-lite-v1:0
+    Description: Bedrock model or inference profile. Nova Lite through the APAC cross-region profile.
+  Backend:
+    Type: String
+    Default: hybrid
+    AllowedValues: [hybrid, bedrock, rules]
+    Description: >-
+      hybrid sends only free-form advice questions to the model and answers harvest-date and
+      ban-status questions from templates; rules uses no model at all (no Bedrock spend).
+  OpsEmail:
+    Type: String
+    Default: ""
+    Description: Optional email for alarms and the budget warning.
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 20
+
+Conditions:
+  HasOpsEmail: !Not [!Equals [!Ref OpsEmail, ""]]
+
+Globals:
+  Function:
+    Architectures: [arm64]
+    Runtime: python3.12
+    Tracing: Active
+
+Resources:
+  # ---------------- guardrail ----------------
+  Guardrail:
+    Type: AWS::Bedrock::Guardrail
+    Properties:
+      Name: !Sub "${AWS::StackName}-guardrail"
+      Description: >-
+        Second line behind parkha/guard.py, which screens crisis, harm, cosmetic spraying and
+        injection in three scripts before this runs.
+      BlockedInputMessaging: >-
+        I can only help with crop pests and safe pesticide use. If you are thinking of harming
+        yourself, please call 1166. म बालीका कीरा र विषादीको सुरक्षित प्रयोगबारे मात्र सहयोग गर्न
+        सक्छु। आफूलाई हानि गर्ने सोच आएमा कृपया ११६६ मा फोन गर्नुहोस्।
+      BlockedOutputsMessaging: >-
+        I couldn't give a checked answer. Please ask your Agriculture Knowledge Centre.
+        जाँच गरिएको जवाफ दिन सकिनँ। कृपया कृषि ज्ञान केन्द्रमा सोध्नुहोस्।
+      TopicPolicyConfig:
+        TopicsConfig:
+          - Name: SelfHarm
+            Type: DENY
+            Definition: Using pesticides or other chemicals to harm or kill oneself, or how much is lethal.
+            Examples:
+              - How much pesticide does it take to die?
+              - Which poison works fastest on a person?
+          - Name: PoisoningOthers
+            Type: DENY
+            Definition: Using pesticides to harm people, livestock, pets or wildlife, or to kill fish in rivers.
+            Examples:
+              - Which pesticide kills fish in the river?
+              - How do I poison my neighbour's dog?
+          - Name: CosmeticSpraying
+            Type: DENY
+            Definition: Spraying produce shortly before sale so it looks fresh or shiny.
+            Examples:
+              - What can I spray so cauliflower looks fresh at the market?
+      ContentPolicyConfig:
+        FiltersConfig:
+          - {Type: HATE, InputStrength: HIGH, OutputStrength: HIGH}
+          - {Type: INSULTS, InputStrength: HIGH, OutputStrength: HIGH}
+          - {Type: SEXUAL, InputStrength: HIGH, OutputStrength: HIGH}
+          - {Type: VIOLENCE, InputStrength: MEDIUM, OutputStrength: MEDIUM}
+          - {Type: MISCONDUCT, InputStrength: HIGH, OutputStrength: HIGH}
+          - {Type: PROMPT_ATTACK, InputStrength: HIGH, OutputStrength: NONE}
+      SensitiveInformationPolicyConfig:
+        PiiEntitiesConfig:
+          - {Type: PHONE, Action: ANONYMIZE}
+          - {Type: EMAIL, Action: ANONYMIZE}
+
+  GuardrailVersion:
+    Type: AWS::Bedrock::GuardrailVersion
+    Properties:
+      GuardrailIdentifier: !Ref Guardrail
+      Description: Version used by the API function. Bump by changing this description.
+
+  # ---------------- answer log ----------------
+  AnswerLog:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: answer_id, AttributeType: S}
+      KeySchema:
+        - {AttributeName: answer_id, KeyType: HASH}
+      # Questions are redacted before storage, crisis questions are never stored, and items expire after 30 days.
+      TimeToLiveSpecification: {AttributeName: expires_at, Enabled: true}
+      SSESpecification: {SSEEnabled: true}
+
+  # ---------------- API ----------------
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      # Every request that gets through can cost tokens and guardrail text units: the stage throttle
+      # is the cheapest denial-of-wallet control there is.
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 5
+      CorsConfiguration:
+        AllowMethods: [GET, POST]
+        AllowOrigins: ["*"]
+        AllowHeaders: [content-type]
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../build/lambda
+      Handler: parkha.aws.handlers.api
+      MemorySize: 512
+      Timeout: 30
+      ReservedConcurrentExecutions: 10
+      Environment:
+        Variables:
+          PARKHA_BACKEND: !Ref Backend
+          PARKHA_MODEL_ID: !Ref ModelId
+          PARKHA_BEDROCK_REGION: !Ref AWS::Region
+          PARKHA_GUARDRAIL_ID: !GetAtt Guardrail.GuardrailId
+          PARKHA_GUARDRAIL_VERSION: !GetAtt GuardrailVersion.Version
+          PARKHA_LOG_TABLE: !Ref AnswerLog
+      Policies:
+        - Statement:
+            - Sid: WriteAnswerLog
+              Effect: Allow
+              Action: [dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt AnswerLog.Arn
+            - Sid: InvokeNovaLiteOnly
+              Effect: Allow
+              Action: [bedrock:InvokeModel]
+              # The APAC profile routes to Nova Lite in several APAC regions: any region, this model only.
+              Resource:
+                - !Sub "arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${ModelId}"
+                - "arn:aws:bedrock:*::foundation-model/amazon.nova-lite-v1:0"
+            - Sid: UseOurGuardrail
+              Effect: Allow
+              Action: [bedrock:ApplyGuardrail]
+              Resource: !GetAtt Guardrail.GuardrailArn
+      Events:
+        Ask:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Method: POST, Path: /ask}
+        Feedback:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Method: POST, Path: /feedback}
+        Health:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Method: GET, Path: /health}
+
+  ApiFunctionLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ApiFunction}"
+      RetentionInDays: 30
+
+  # ---------------- alarms ----------------
+  OpsTopic:
+    Type: AWS::SNS::Topic
+
+  OpsSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasOpsEmail
+    Properties: {TopicArn: !Ref OpsTopic, Protocol: email, Endpoint: !Ref OpsEmail}
+
+  GateRejectionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: >-
+        The model's answers failed the safety gate 10 or more times in an hour. Farmers still got a
+        checked template answer, but a model, prompt or data change is producing unsafe text.
+      Namespace: Parkha
+      MetricName: GateRejections
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  FallbackAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Ten or more answers in an hour fell back to templates (Bedrock failing, throttled, or the gate).
+      Namespace: Parkha
+      MetricName: Fallbacks
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  CrisisAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: >-
+        Three or more crisis refusals in a day. The questions are not stored; this tells a human that
+        people in crisis are reaching the service, so the helpline wording and reach can be reviewed.
+      Namespace: Parkha
+      MetricName: CrisisRefusals
+      Statistic: Sum
+      Period: 86400
+      EvaluationPeriods: 1
+      Threshold: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  TokenSpendAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Over 5 million input tokens in a day, about 1,000x normal. Scripted abuse or a tool loop.
+      Namespace: Parkha
+      MetricName: InputTokens
+      Statistic: Sum
+      Period: 86400
+      EvaluationPeriods: 1
+      Threshold: 5000000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  ErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: The API function is throwing.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{Name: FunctionName, Value: !Ref ApiFunction}]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+  Budget:
+    Type: AWS::Budgets::Budget
+    Condition: HasOpsEmail
+    Properties:
+      Budget:
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: {Amount: !Ref MonthlyBudgetUsd, Unit: USD}
+      NotificationsWithSubscribers:
+        - Notification: {NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80}
+          Subscribers: [{SubscriptionType: EMAIL, Address: !Ref OpsEmail}]
+        - Notification: {NotificationType: FORECASTED, ComparisonOperator: GREATER_THAN, Threshold: 100}
+          Subscribers: [{SubscriptionType: EMAIL, Address: !Ref OpsEmail}]
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com"
+  GuardrailId:
+    Value: !GetAtt Guardrail.GuardrailId
+  GuardrailVersion:
+    Value: !GetAtt GuardrailVersion.Version
+  AnswerLogTable:
+    Value: !Ref AnswerLog
