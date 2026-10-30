@@ -45,10 +45,29 @@ _BS_ALIASES = {
     11: ["फागुन", "फाल्गुन", "falgun", "fagun", "phagun"],
     12: ["चैत", "चैत्र", "chaitra", "chait"],
 }
+# Full names and the usual abbreviations only: matching on the first three letters read "market 2"
+# as 2 March and "maybe 2 times" as 2 May, which overrode "yesterday" and gave "harvest now".
 _AD_MONTHS = {
-    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
-    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
-}  # fmt: skip
+    name: m
+    for m, names in enumerate(
+        [
+            ("january", "jan"),
+            ("february", "feb"),
+            ("march", "mar"),
+            ("april", "apr"),
+            ("may",),
+            ("june", "jun"),
+            ("july", "jul"),
+            ("august", "aug"),
+            ("september", "sep", "sept"),
+            ("october", "oct"),
+            ("november", "nov"),
+            ("december", "dec"),
+        ],
+        start=1,
+    )
+    for name in names
+}
 
 _RELATIVE = [
     (re.compile(r"\b(today|aaja|aja)\b|आज", re.I), 0),
@@ -126,7 +145,7 @@ def parse_spray_date(text: str, today: date) -> date | None:
         return bs
     for m in _AD_TEXT.finditer(t):
         day, mon, year = (m.group(1), m.group(2), m.group(3)) if m.group(1) else (m.group(5), m.group(4), m.group(6))
-        month = _AD_MONTHS.get(mon[:3].lower())
+        month = _AD_MONTHS.get(mon.lower())
         if not month:
             continue
         y = int(year) if year else today.year
