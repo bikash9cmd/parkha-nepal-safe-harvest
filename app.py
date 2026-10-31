@@ -27,7 +27,6 @@ with st.sidebar:
             picked = q
     st.divider()
     today = st.date_input("Today is", value=date.today())
-    show_trace = st.toggle("Show tool calls and the safety gate", value=False)
     st.caption(
         "Runs on the offline rules backend: the same tools, label book and safety gate as the Bedrock path. "
         "Harvest dates come from the label waiting period, never from a model."
@@ -39,12 +38,9 @@ st.caption(
 )
 
 st.session_state.setdefault("history", [])
-for role, text, extra in st.session_state.history:
+for role, text in st.session_state.history:
     with st.chat_message(role):
         st.markdown(text)
-        if extra and show_trace:
-            with st.expander("How it decided"):
-                st.json(extra)
 
 question = st.chat_input("Ask about a pest, a product or when it is safe to harvest") or picked
 if question:
@@ -55,14 +51,6 @@ if question:
         body += "\n\n**Sources**\n" + "\n".join(
             f"- [{s.get('title', s.get('id'))}]({s.get('url', '')})" for s in reply.sources
         )
-    trace = {
-        k: v
-        for k, v in reply.public(debug=True).items()
-        if k in ("tool_calls", "tool_results", "gate_problems", "refusal")
-    }
     with st.chat_message("assistant"):
         st.markdown(body)
-        if show_trace:
-            with st.expander("How it decided", expanded=True):
-                st.json(trace)
-    st.session_state.history += [("user", question, None), ("assistant", body, trace)]
+    st.session_state.history += [("user", question), ("assistant", body)]

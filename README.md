@@ -151,7 +151,7 @@ security for LLM apps (prompt injection, least privilege, denial-of-wallet).
 
 **[https://parkha-nepal-safe-harvest.onrender.com](https://parkha-nepal-safe-harvest.onrender.com)**
 
-Ask in English, Nepali or romanised Nepali when it is safe to harvest after spraying, what to do about a pest, or whether a product is banned. Turn on the trace to see the tool calls and the safety gate.
+Ask in English, Nepali or romanised Nepali when it is safe to harvest after spraying, what to do about a pest, or whether a product is banned.
 
 It runs on a free server that sleeps when nobody is using it, so the first visit can take a minute to wake up. Everything runs offline: no API keys, no cloud account.
 
