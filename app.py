@@ -7,9 +7,10 @@ from datetime import date
 
 import streamlit as st
 
+import brand
 from parkha import assistant
 
-st.set_page_config(page_title="Parkha", page_icon="🌱", layout="centered")
+brand.page("parkha")
 
 EXAMPLES = [
     "I sprayed chlorantraniliprole on my brinjal yesterday. When can I harvest?",
@@ -32,25 +33,23 @@ with st.sidebar:
         "Harvest dates come from the label waiting period, never from a model."
     )
 
-st.title("Parkha (पर्ख)")
-st.caption(
-    "Pest advice for Nepali vegetable farmers that never skips the waiting period. English, Nepali or romanised Nepali."
-)
 
 st.session_state.setdefault("history", [])
 for role, text in st.session_state.history:
-    with st.chat_message(role):
+    with st.chat_message(role, avatar=brand.avatar(role, "parkha")):
         st.markdown(text)
 
 question = st.chat_input("Ask about a pest, a product or when it is safe to harvest") or picked
 if question:
-    st.chat_message("user").markdown(question)
+    st.chat_message("user", avatar=brand.avatar("user", "parkha")).markdown(question)
     reply = assistant.ask(question, backend="rules", today=today)
     body = reply.answer
     if reply.sources:
         body += "\n\n**Sources**\n" + "\n".join(
             f"- [{s.get('title', s.get('id'))}]({s.get('url', '')})" for s in reply.sources
         )
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=brand.avatar("assistant", "parkha")):
         st.markdown(body)
     st.session_state.history += [("user", question), ("assistant", body)]
+
+brand.footer()
