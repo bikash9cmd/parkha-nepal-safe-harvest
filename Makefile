@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: setup demo serve eval eval-bedrock gate-eval cost test lint validate-infra build
+.PHONY: setup demo serve eval eval-bedrock gate-eval cost test lint validate-infra build app
 
 setup:            ## virtualenv with dev dependencies
 	$(PY) -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
@@ -38,3 +38,6 @@ validate-infra:   ## lint the SAM/CloudFormation template
 
 build:            ## the Lambda package (code + label tables + notes) in build/lambda
 	./infra/build.sh
+
+app:              ## the Streamlit demo on http://localhost:8501 (pip install -r requirements-app.txt first)
+	$(PY) -m streamlit run app.py

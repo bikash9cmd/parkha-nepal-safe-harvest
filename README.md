@@ -1,5 +1,7 @@
 # Parkha (पर्ख, "wait"): pest advice for Nepali farmers that never skips the waiting period
 
+[![Try it live](https://img.shields.io/badge/Try_it-live-2ea44f?style=for-the-badge)](https://parkha-nepal-safe-harvest.onrender.com)
+
 Parkha is a Nepali and English assistant on Amazon Bedrock for vegetable farmers, the agrovet
 staff they ask, and municipal agriculture technicians. It answers three questions: what to do
 about a pest, whether a product is banned in Nepal, and **when it is safe to harvest after
@@ -144,6 +146,16 @@ prompt-attack filter, PII) and where to apply them; deterministic output validat
 hallucination detection; evaluation with a holdout set and adversarial mutation tests; responsible
 AI for a high-harm domain (crisis handling, refusal design, language coverage, privacy); and
 security for LLM apps (prompt injection, least privilege, denial-of-wallet).
+
+## Try it live
+
+**[https://parkha-nepal-safe-harvest.onrender.com](https://parkha-nepal-safe-harvest.onrender.com)**
+
+Ask in English, Nepali or romanised Nepali when it is safe to harvest after spraying, what to do about a pest, or whether a product is banned. Turn on the trace to see the tool calls and the safety gate.
+
+It runs on a free server that sleeps when nobody is using it, so the first visit can take a minute to wake up. Everything runs offline: no API keys, no cloud account.
+
+To run the same page locally: `pip install -r requirements-app.txt` and then `streamlit run app.py`.
 
 ## Run it
 
